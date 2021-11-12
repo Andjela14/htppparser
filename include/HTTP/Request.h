@@ -7,15 +7,10 @@
  * 
  */
 #pragma once
-#include <utility>
-#include <map>
-#include <regex>
-#include <vector>
 #include <URI/Uri.h>
-
+#include "Message.h"
 namespace HTTP
 {   
-  
     /**
      * @brief Enumeration for HTTP methods
      * 
@@ -31,17 +26,6 @@ namespace HTTP
         TRACE = 7, 
         PATCH = 8,
         COUNT = 9
-    };
-
-    /**
-     * @brief Enumeration for HTTP versions
-     * 
-     */
-    enum class Version {
-        HTTP09 = 0,
-        HTTP10 = 1,
-        HTTP11 = 2,
-        HTTP20 = 3
     };
 
     /**
@@ -61,28 +45,7 @@ namespace HTTP
         { "COUNT",   Method::COUNT   }
     };
 
-    /**
-     * @brief Maping string with enumeration HTTP-versions
-     * 
-     */
-    const std::map<std::string, Version> table_versions = {
-        { "HTTP/0.9", Version::HTTP09 },
-        { "HTTP/1.0", Version::HTTP10 },
-        { "HTTP/1.1", Version::HTTP11 },
-        { "HTTP/2.0", Version::HTTP20 }
-    };
-  
-    /**
-     * @brief Structur for filds in fields consist of key word for field and value for that field
-     * 
-     */
-    struct Header_Field{
-
-        Field_Key_Word field;
-        std::string f_value;
-    };
-
-    class Request{
+    class Request : public Message {
       
     public:
 
@@ -104,52 +67,35 @@ namespace HTTP
         Request& operator=(Request &&) = delete;
 
         /**
-         * @brief Get the Method object
+         * @brief Get the request method 
          * 
          * @return Method 
          */
-        Method get_method();
-
-        /**
-         * @brief Get the version object
-         * 
-         * @return Version 
-         */
-        Version get_version();
+        Method get_method() const;
 
         /**
          * @brief Get the uri type 
          * 
          * @return std::string 
          */
-        std::string get_uri_type();
+        std::string get_uri_type() const;
 
+    private:
+        
         /**
          * @brief Parsing request line
          * 
          * @param request_line 
          * @return true if request line is valid, otherwise returns false
          */
-        bool parse_request_line(const std::string& request_line);
-
-    private:
+        bool parse_start_line(const std::string& request_line);
 
         /**
          * @brief Maping enum Uri_type to string 
          * 
          * @return const std::string 
          */
-        const std::string uri_type_to_stirng();
-        
-        /**
-         * @brief A sequence of calls to this function split text into tokens, which are strings separated by delimiter string
-         * 
-         * @param text 
-         * @param delimeter 
-         * @param position this is position from witch we search delimeter 
-         * @return std::pair<std::string, std::size_t> first is substring from position to delimeter, second is one position after delimeter 
-         */
-        std::pair<std::string, std::size_t> tokenize(const std::string& text, const std::string& delimeter, std::size_t position);
+        const std::string uri_type_to_stirng() const;
 
         /**
          * @brief Validating Http request Method
@@ -168,71 +114,38 @@ namespace HTTP
         bool validate_uri(const std::string& uri);
 
         /**
-         * @brief Checks if uri of request is an absolute uri
+         * @brief Parsing and validating request uri if it represents an absolute uri
          * 
          * @param uri 
          * @return true if uri is absolute, otherwise returns false
          */
-        bool validate_absolute_uri(const std::string& uri);
+        bool parse_absolute_uri(const std::string& uri);
 
         /**
-         * @brief Checks if uri of request is an absolute path
+         * @brief Parsing and validating request uri if it represents an absolute path 
          * 
          * @param uri 
          * @return true if path is absolute, otherwise returns false
          */
-        bool validate_absolute_path(const std::string& uri);
+        bool parse_absolute_path(const std::string& uri);
 
         /**
-         * @brief Checks if uri of request is just authority part of an uri 
+         * @brief Parsing and validating request uri if it represents an authority part of an uri 
          * 
          * @param uri 
          * @return true if uri has only authority, otherwise returns false 
          */
-        bool validate_authority_uri(const std::string& uri);
+        bool parse_authority_uri(const std::string& uri);
         
         /**
-         * @brief Validate conditions of asterisk uri 
+         * @brief Parsing and validating request uri if it is an asterisk
          * 
          * @param uri 
          * @return true if uri is aterisk, otherwise returns false
          */
-        bool validate_aterisk_uri(const std::string& uri);
-
-        /**
-         * @brief Validating Http version
-         * 
-         * @param version 
-         * @return true if version is valid, otherwise returns false
-         */
-        bool validate_version(const std::string& version);
-
-        /**
-         * @brief Checking if "main_string" ends with "to_match" string
-         * 
-         * @param main_str 
-         * @param to_match 
-         * @return true if main_stirng ends with to_match otherwise returns false
-         */
-        bool ends_with(const std::string &main_str, const std::string &to_match);
-        
-        /**
-         * @brief Accepts whole header from request and parses header_fields, stores each header_field in vector<Header_Field> m_fields
-         * if each header fild is valid, returns true, otherwise returns false
-         * 
-         * @param fields 
-         * @return true 
-         * @return false 
-         */
-        bool parse_header_fields(const std::string& header);
+        bool parse_aterisk_uri(const std::string& uri);
 
     private:
-
-        /**
-         * @brief Defining CRLF
-         * 
-         */
-        const std::string CRLF = "\r\n";
 
         /**
          * @brief asterisk const string for checking scheme of uri
@@ -257,7 +170,7 @@ namespace HTTP
          * 
          */
         enum class Uri_type{
-            asterisk , 
+            asterisk, 
             absolute_uri,
             absolute_path,
             authority
@@ -281,22 +194,10 @@ namespace HTTP
         Request_uri m_uri; 
 
         /**
-         * @brief HTTP method atribute
+         * @brief HTTP method attribute
          * 
          */
         Method m_method;
-        
-        /**
-         * @brief HTTP version atribute
-         * 
-         */
-        Version m_version;
-        
-        /**
-        * @brief Represent header that is constucted of fields fields 
-        * 
-        */
-        std::vector<Header_Field> m_header;
 
     };
 
